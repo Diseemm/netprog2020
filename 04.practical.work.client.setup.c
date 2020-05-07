@@ -6,8 +6,12 @@
 #define PORT 8784
 
 int main() {
+    char hostname[128];
+    printf("Enter: ");
+    scanf("%s", hostname);
+
     struct sockaddr_in servaddr;
-    struct hostent *hostip;
+    struct hostent *hostip = gethostbyname(hostname);
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     
     if (sockfd < 0) {
@@ -15,7 +19,7 @@ int main() {
         exit(0);
     } else printf("Created!\n");
 
-    if ((hostip = gethostbyname("www.usth.edu.vn")) == NULL){
+    if (hostip == NULL) {
         printf("Unknown host!\n");
         exit(0);
     } else printf("Got host!\n");

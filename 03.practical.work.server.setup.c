@@ -30,11 +30,11 @@ int main() {
     if (listen(sockfd, 5) < 0) {
         printf("Error listening.\n");
         exit(0);
-    } else ("Listening");
+    } else printf("Listening\n");
 
     clen = sizeof(caddr);
     if ((clientfd = accept(sockfd, (struct sockaddr *) &caddr, &clen)) < 0) {
         printf("Error accepting connection.\n");
         exit(0);
-    } else ("Accepted!\n");
+    } else printf("Accepted!\n");
 }

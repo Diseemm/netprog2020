@@ -7,7 +7,10 @@
 #include <sys/types.h> 
 #define PORT 8784
 
+extern ssize_t send(), recv();
+
 int main() {
+    char *buffer;
     int sockfd, clen, clientfd;
     struct sockaddr_in saddr, caddr;
 
@@ -33,9 +36,27 @@ int main() {
     } else printf("Listening\n");
 
     clen = sizeof(caddr);
-    if ((clientfd = accept(sockfd, (struct sockaddr *) &caddr, &clen)) < 0) {
+    clientfd = accept(sockfd, (struct sockaddr *) &caddr, &clen);
+    
+    if (clientfd < 0) {
         printf("Error accepting connection.\n");
         exit(0);
-    } else printf("Accepted!\n");
+    } else {    
+        printf("Accepted!\n");
+        while (1) {
+            if (recv(clientfd, buffer, sizeof(buffer), 0) == 0) {
+                printf("Error!!!\n");
+                exit(0);
+            } else {
+                printf("From client: %s\n", buffer);
+                memset(buffer, sizeof(buffer), 0);
+                printf("Enter: ");
+                scanf("%s", buffer);
+                send(clientfd, buffer, sizeof(buffer), 0);
+            }
+        }
+    }
+
+    close(clientfd);
     return 0;
 }

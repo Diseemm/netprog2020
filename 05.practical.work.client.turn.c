@@ -40,12 +40,15 @@ int main() {
         while (1) {
             printf("Enter: ");
             scanf("%s", buffer);
-            send(sockfd, buffer, sizeof(buffer), 0);
+            send(sockfd, buffer, strlen(buffer)+1, 0);
             memset(buffer, sizeof(buffer), 0);
             if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {
                 printf("Error!\n");
                 exit(0);
-            } else printf("From server: %s\n", buffer);
+            } else {
+                printf("From server: %s\n", buffer);
+                exit(0);
+            }
         }
     }
 

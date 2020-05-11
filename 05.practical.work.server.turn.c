@@ -10,7 +10,7 @@
 extern ssize_t send(), recv();
 
 int main() {
-    char *buffer;
+    char *buffer = malloc(sizeof(buffer));
     int sockfd, clen, clientfd;
     struct sockaddr_in saddr, caddr;
 
@@ -52,7 +52,7 @@ int main() {
                 memset(buffer, sizeof(buffer), 0);
                 printf("Enter: ");
                 scanf("%s", buffer);
-                send(clientfd, buffer, sizeof(buffer), 0);
+                send(clientfd, buffer, strlen(buffer)+1, 0);
             }
         }
     }

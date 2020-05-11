@@ -37,5 +37,8 @@ int main() {
         printf("Error accepting connection.\n");
         exit(0);
     } else printf("Accepted!\n");
+<<<<<<< HEAD
     return 0;
+=======
+>>>>>>> 125aae0c6649d7575db800dc2cfb314696494f2a
 }

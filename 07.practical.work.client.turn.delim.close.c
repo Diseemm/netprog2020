@@ -41,6 +41,7 @@ int main() {
             printf("Enter: ");
             memset(buffer, 0, sizeof(buffer));
             scanf("%s", buffer);
+            if (strcmp(buffer, "/quit") == 0)   break;
             send(sockfd, buffer, strlen(buffer)+1, 0);
             memset(buffer, sizeof(buffer), 0);
             if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {

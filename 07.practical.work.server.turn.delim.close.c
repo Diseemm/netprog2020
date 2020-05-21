@@ -59,6 +59,7 @@ int main() {
                 memset(buffer, 0, sizeof(buffer));
                 printf("Enter: ");
                 scanf("%s", buffer);
+                if (strcmp(buffer, "/dc") == 0)    break;
                 send(clientfd, buffer, strlen(buffer)+1, 0);
             }
         }

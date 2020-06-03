@@ -1,16 +1,17 @@
-#include <netdb.h> 
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <netinet/in.h> 
 #include <string.h> 
 #include <sys/socket.h> 
-#include <fcntl.h>
+#include <sys/types.h> 
 #define PORT 8784
-
-extern ssize_t send(), recv();
 
 int main() {
     char buffer[128];
-    char hostname[128];
+    char hostname[30];
     printf("Enter: ");
     scanf("%s", hostname);
 
@@ -22,6 +23,10 @@ int main() {
         printf("Error creating socket!\n");
         exit(0);
     } else printf("Created!\n");
+
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    int fl = fcntl(sockfd, F_GETFL, 0);
+    fl |= O_NONBLOCK;
 
     if (hostip == NULL) {
         printf("Unknown host!\n");
@@ -38,24 +43,31 @@ int main() {
         exit(0);
     } else {
         printf("Connected!\n");
-        setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
-        fcntl(sockfd, F_SETFL, O_NONBLOCK);
-
-        while (1) {
-            printf("Enter: ");
-            memset(buffer, 0, sizeof(buffer));
-            scanf("%s", buffer);
-            if (strcmp(buffer, "/quit") == 0)   break;
-            send(sockfd, buffer, strlen(buffer)+1, 0);
-            memset(buffer, sizeof(buffer), 0);
-            if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {
-                printf("Error!\n");
-                exit(0);
-            } else {
-                    printf("From server: %s\n", buffer);
+        fcntl(sockfd, F_SETFL, fl);
+            for ( ; ; ) {
+                printf("Enter: ");
+                memset(buffer, 0, sizeof(buffer));
+                scanf("%s", buffer);
+                if (strcmp(buffer, "/quit") == 0) {
+                    send(sockfd, buffer, strlen(buffer)+1, 0);
+                    printf("Exiting!\n");
+                    memset(buffer, 0, sizeof(buffer));
+                    shutdown(sockfd, SHUT_WR);
+                    close(sockfd);
                     exit(0);
+                } else {
+                    send(sockfd, buffer, strlen(buffer)+1, 0);
+                    memset(buffer, 0, sizeof(buffer));
+                    if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {
+                        printf("Error!\n");
+                        exit(0);
+                    } else {     
+                        printf("From server: %s\n", buffer);
+                    }
                 }
             }
-        }
+    }
+
+    close(sockfd);
     return 0;
 }

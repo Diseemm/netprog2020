@@ -1,15 +1,13 @@
-#include <stdio.h> 
-#include <netdb.h> 
-#include <netinet/in.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/socket.h> 
-#include <sys/types.h> 
-#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <netdb.h>
+#include <netinet/in.h> 
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #define PORT 8784
-
-extern ssize_t send(), recv();
 
 int main() {
     char buffer[128];
@@ -27,8 +25,9 @@ int main() {
     saddr.sin_addr.s_addr = htonl(INADDR_ANY);
     saddr.sin_port = htons(PORT);
 
-    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
-    int fl = fcntl(sockfd, F_GETFL, 0);
+    setsockopt(clientfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
+    int fl = fcntl(clientfd, F_GETFL, 0);
+    fl |= O_NONBLOCK;
 
     if (bind(sockfd, (struct sockaddr *) &saddr, sizeof(saddr)) != 0) {
         printf("Error binding.\n");
@@ -41,20 +40,19 @@ int main() {
     } else printf("Listening\n");
 
     clen = sizeof(caddr);
-    
-    while(1) {
+    while (1) {
         clientfd = accept(sockfd, (struct sockaddr *) &caddr, (unsigned int *)&clen);
-        if (clientfd < 0) {
-            printf("Error accepting connection.\n");
-            exit(0);
-        } else {    
+        if (clientfd > 0) {
             printf("Accepted!\n");
-            fcntl(sockfd, F_SETFL, O_NONBLOCK);
-            while (1) {
+            fcntl(clientfd, F_SETFL, fl);
+            for ( ; ; ) {
+                memset(buffer, 0, sizeof(buffer));
                 int n = recv(clientfd, buffer, sizeof(buffer), 0);
-                if (n == 0) {
-                    printf("Error!!!\n");
-                    exit(0);
+                if (strcmp(buffer, "/quit") == 0) {
+                    memset(buffer, 0, sizeof(buffer));
+                    printf("Client exited!\n");
+                    shutdown(clientfd, SHUT_WR);
+                    close(clientfd);
                 } else {
                     int firstChar = 0;
                     for (int i = 0; i < n; i++) {
@@ -66,13 +64,14 @@ int main() {
                     memset(buffer, 0, sizeof(buffer));
                     printf("Enter: ");
                     scanf("%s", buffer);
-                    if (strcmp(buffer, "/dc") == 0)    break;
+                    if (strcmp(buffer, "/dc") == 0) {
+                        exit(0);
+                    }
                     send(clientfd, buffer, strlen(buffer)+1, 0);
                 }
             }
-        }
+        } else printf("Not Accepted!!!!!\n");   
     }
-
-    close(clientfd);
+    close(sockfd);
     return 0;
 }
